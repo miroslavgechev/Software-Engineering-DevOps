@@ -425,7 +425,7 @@ test('Check if creator can see Edit and Delete buttons', async ({ page }) => {
     const isEditBooksLinkVisible = await editBooksLink.isVisible();
     expect(isEditBooksLinkVisible).toBe(true);
 
-    const deleteBooksLink = await page.$('#details-page > div.book-information > div > a:nth-child(2)');
+    const deleteBooksLink = await page.$('#details-page > div.book-information > div > a:nth-child(1)');
     const isDeleteBooksLinkVisible = await deleteBooksLink.isVisible();
     expect(isDeleteBooksLinkVisible).toBe(true);
 });
@@ -468,7 +468,7 @@ test('Check if creator can see Like button', async ({ page }) => {
 
     await page.waitForSelector('.otherBooks');
 
-    await page.click('#dashboard-page > ul > li:nth-child(2) > a');
+    await page.click('#dashboard-page > ul > li:nth-child(3) > a');
     await page.waitForSelector('.book-information');
 
     const likeBooksLink = await page.$('div.actions > a.button:has-text("Like")');
@@ -489,7 +489,7 @@ test('Check if non-creator can see Like button', async ({ page }) => {
 
     await page.waitForSelector('.otherBooks');
 
-    await page.click('#dashboard-page > ul > li:nth-child(3) > a');
+    await page.click('#dashboard-page > ul > li:nth-child(2) > a');
     await page.waitForSelector('.book-information');
 
     const likeBooksLink = await page.$('div.actions > a.button:has-text("Like")');
