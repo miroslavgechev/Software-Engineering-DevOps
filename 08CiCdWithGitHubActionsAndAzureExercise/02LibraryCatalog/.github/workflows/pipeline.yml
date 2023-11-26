@@ -1,63 +1,55 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: build-test-deploy
+name: Build Test Deploy
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
-  build:
+  build-test:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-          cache: "npm"
-      - name: Install dependencies
-        run: npm install
-      - name: Start server
-        run: node server.js &
-        working-directory: server
-      - name: Start app
-        run: npm run start-for-tests &
 
-  test:
-    needs: build
-    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-          cache: "npm"
-      - name: Install dependencies
-        run: npm install
-      - name: Start server
-        run: node server.js &
-        working-directory: server
-      - name: Start app
-        run: npm run start-for-tests &
-      - name: Install playwright
-        run: npx playwright install
-      - name: Run tests
-        run: npx playwright test tests/ui.test.js
-        working-directory: tests
+    - uses: actions/checkout@v3
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+    - name: Install node modules
+      run: npm install
+    - name: Install Playwright
+      run: npx playwright install
+    - name: Change the config value
+      run: echo "export const settings = { host:\"http://localhost:3030\" };" > src/config.js
+    - name: Start BackEnd
+      run: npm run start-be &
+    - name: Wait 5 seconds
+      run: sleep 5
+    - name: Start FrontEnd
+      run: npm run start-fe &
+    - name: Wait 5 seconds
+      run: sleep 5
+    - name: Start Integration tests
+      run: npm run test
 
-  deploy:
-    needs: test
+  deploy-backend:
+    needs: build-test
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to Production
+      - name: Deploy to production
         uses: johnbeynon/render-deploy-action@v0.0.8
         with:
-          service-id: ${{ secrets.SERVICE_ID }}
-          api-key: ${{ secrets.RENDER_TOKEN }}
+          service-id: ${{ secrets.RENDER_BACKEND_KEY }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
+
+  deploy-frontend:
+    needs: deploy-backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to production
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.RENDER_FRONTEND_KEY }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
