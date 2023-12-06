@@ -1,0 +1,56 @@
+name: Build and test
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install project dependencies
+        run: npm install
+      - name: Run unit test for the application
+        run: npm run test:unit
+      - name: Display Softuni Username
+        run: echo 'miroslav.gechev'
+
+  deploy:
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to production
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.MY_RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.MY_RENDER_API_KEY }}
+      - name: Wait for deployment to complete
+        run: sleep 60
+
+  run-ui-tests:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install project dependencies
+        run: npm install
+      - name: Install Playwright
+        run: npx playwright install
+      - name: Run UI test for the application
+        run: npm run test:ui
